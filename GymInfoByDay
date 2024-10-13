@@ -1,0 +1,100 @@
+function recordAndDivideGymInformationByDay() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var range = sheet.getRange(1, 1, sheet.getLastRow(), 1); // Get the leftmost column (column A)
+  var bgColors = range.getBackgrounds(); // Get the background colors of the leftmost column
+
+  var output = [];
+
+  // Get the header row (first row) from the active sheet
+  var headerRowValues = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  // Insert header row into Legs, Arms, and Chest sheets
+  insertHeaderIntoLegsSheet("Legs", headerRowValues);
+  insertHeaderIntoLegsSheet("Arms", headerRowValues);
+  insertHeaderIntoLegsSheet("Chest", headerRowValues);
+
+  for (var row = 0; row < bgColors.length; row++) {
+    var color = bgColors[row][0]; // Only check the first column (index 0)
+
+    // Check for specific colors and act accordingly
+    switch (color) {
+      case "#4a86e8":
+        var rowValues = sheet.getRange(row + 1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        insertValueIntoLegsSheet("Legs", rowValues);
+        setLeftmostColumnBackground("Legs", "#4a86e8"); // Set the leftmost column to blue
+        break;
+      case "#93c47d":
+        var rowValues = sheet.getRange(row + 1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        insertValueIntoLegsSheet("Arms", rowValues);
+        setLeftmostColumnBackground("Arms", "#93c47d"); // Set the leftmost column to green
+        break;
+      case "#e06666":
+        var rowValues = sheet.getRange(row + 1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        insertValueIntoLegsSheet("Chest", rowValues);
+        setLeftmostColumnBackground("Chest", "#e06666"); // Set the leftmost column to red
+        break;
+      default:
+        // No action for other colors or if there's no color
+        break;
+    }
+  }
+
+  // Remove empty columns from Legs, Arms, and Chest sheets
+  removeEmptyColumns("Legs");
+  removeEmptyColumns("Arms");
+  removeEmptyColumns("Chest");
+  
+  SpreadsheetApp.getUi().alert("New sheets completed");
+}
+
+// Insert header function (no changes needed)
+function insertHeaderIntoLegsSheet(sheetName, headerRowValues) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var legsSheet = ss.getSheetByName(sheetName);
+  if (!legsSheet) {
+    legsSheet = ss.insertSheet(sheetName);
+    //SpreadsheetApp.getUi().alert("Created new sheet: " + sheetName);
+  } else {
+    legsSheet.clear();
+    //SpreadsheetApp.getUi().alert("Cleared contents of sheet: " + sheetName);
+  }
+  legsSheet.getRange(1, 1, 1, headerRowValues.length).setValues([headerRowValues]);
+}
+
+// Insert value function (no changes needed)
+function insertValueIntoLegsSheet(sheetName, rowValues) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var legsSheet = ss.getSheetByName(sheetName);
+  var nextRow = legsSheet.getLastRow() + 1;
+  legsSheet.getRange(nextRow, 1, 1, rowValues.length).setValues([rowValues]);
+}
+
+// Function to remove empty columns (no changes needed)
+function removeEmptyColumns(sheetName) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return;
+  var lastColumn = sheet.getLastColumn();
+  var lastRow = sheet.getLastRow();
+
+  for (var col = lastColumn; col >= 1; col--) {
+    var columnRange = sheet.getRange(2, col, lastRow - 1, 1).getValues();
+    var isEmpty = columnRange.every(function(row) {
+      return row[0] === "";
+    });
+    if (isEmpty) {
+      sheet.deleteColumn(col);
+    }
+  }
+}
+
+// New function to set the leftmost column background color
+function setLeftmostColumnBackground(sheetName, color) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return;
+
+  var lastRow = sheet.getLastRow(); // Get the last row
+  var range = sheet.getRange(1, 1, lastRow, 1); // Get the leftmost column (column A)
+  range.setBackground(color); // Set the background color for the entire column
+}
